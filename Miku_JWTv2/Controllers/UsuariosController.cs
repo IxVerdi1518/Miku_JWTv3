@@ -52,6 +52,9 @@ namespace Miku_JWTv2.Controllers
             ((int id_usuario, int id_rol_user), int id_cliente) = _usuariosDAO.ValidarUsuario(user);
             if (id_usuario != 0)
             {
+                var jwt = _configuration.GetSection("Jwt").Get<Jwt>();
+                var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.Key));
+                var singIn = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
                 var claims = new List<Claim> // Se crean las reclamaciones para el usuario autenticado
                     {
                     new Claim(ClaimTypes.Name, user.correo_elec),
@@ -75,11 +78,18 @@ namespace Miku_JWTv2.Controllers
 
                 if (id_rol_user == 1)
                 {
+                    var token = new JwtSecurityToken(
+                    jwt.Issuer,
+                    jwt.Audience,
+                    claims,
+                    expires: DateTime.Now.AddMinutes(4),
+                    signingCredentials: singIn
+                    );
                     return new JsonResult(new
                     {
                         success = true,
                         message = "SOS ADMIN",
-                        result = ""
+                        result = new JwtSecurityTokenHandler().WriteToken(token)
                     });
                     // return RedirectToAction("Administrador", "Administrador"); // Redirige al panel de administración si es un administrador
                 }
@@ -88,29 +98,20 @@ namespace Miku_JWTv2.Controllers
                     // Se registra una auditoría y se redirige a la página principal
                     _usuariosDAO.RegistrarAuditoria(id_usuario, DateTime.Now, true);
                     // return RedirectToAction("Index", "Home");
-                    return new JsonResult(new
-                    {
-                        success = true,
-                        message = "SOS CLIENTE",
-                        result = ""
-                    });
-                }
-                var jwt = _configuration.GetSection("Jwt").Get<Jwt>();
-                var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.Key));
-                var singIn = new SigningCredentials(key,SecurityAlgorithms.HmacSha256);
-                var token = new JwtSecurityToken(
+                    var token = new JwtSecurityToken(
                     jwt.Issuer,
                     jwt.Audience,
                     claims,
                     expires: DateTime.Now.AddMinutes(4),
                     signingCredentials: singIn
                     );
-                return new JsonResult(new
-                {
-                    success = true,
-                    message = "Exito",
-                    result = new JwtSecurityTokenHandler().WriteToken(token)
-                });
+                    return new JsonResult(new
+                    {
+                        success = true,
+                        message = "SOS CLIENTE",
+                        result = new JwtSecurityTokenHandler().WriteToken(token)
+                    });
+                }
             }
             else
             {
