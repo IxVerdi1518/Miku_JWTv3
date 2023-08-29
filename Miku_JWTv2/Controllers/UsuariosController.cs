@@ -26,29 +26,9 @@ namespace Miku_JWTv2.Controllers
             _configuration = configuration;
         }
 
-        //public UsuariosController(UsuariosDAO usuariosDAO)
-        //{
-        //    _usuariosDAO = usuariosDAO;
-        //}
-        //public dynamic IniciarSesion([FromBody] Object optData)
-        //{
-        //    var data = JsonConvert.DeserializeObject<dynamic>(optData.ToString());
-
-        //    string user = data.usuario.ToString();
-        //    string contra = data.contraseña.ToString();
-
-
-        //}
         [HttpPost]
         public async Task<IActionResult> Login(Usuarios user)
         {
-            //try
-            //{
-            //var data = JsonConvert.DeserializeObject<dynamic>(optData.ToString());
-
-            //string user = data.usuario.ToString();
-            //string contra = data.contraseña.ToString();
-            // Se valida el usuario en la base de datos y se obtiene su información
             ((int id_usuario, int id_rol_user), int id_cliente) = _usuariosDAO.ValidarUsuario(user);
             if (id_usuario != 0)
             {
@@ -122,13 +102,6 @@ namespace Miku_JWTv2.Controllers
                     result = ""
                 });
             }
-            
-            //}
-            //catch (System.Exception)
-            //{
-            //    ViewBag.Error = "Credenciales incorrectas"; // Muestra un mensaje de error si las credenciales son incorrectas
-            //    return View();
-            //}
         }
     }
 }
