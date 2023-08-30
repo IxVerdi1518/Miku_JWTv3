@@ -51,7 +51,7 @@ namespace Miku_JWTv2.Controllers
             var newToken = new JwtSecurityTokenHandler().WriteToken(token);
             return new JsonResult(new
             {
-                Url = new Uri("https://localhost:7223/Acceso/AcccesToken?token="+ newToken),
+                Url = new Uri("https://localhost:7223/Acceso/Login?token="+ newToken),
                 success = true,
                 message = "SOS ADMIN",
                 result = newToken
