@@ -13,123 +13,52 @@ using System.IdentityModel.Tokens.Jwt;
 
 namespace Miku_JWTv2.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    [AllowAnonymous]
+    [Route("api/[controller]")] // Atributo para especificar la ruta base de la API para este controlador
+    [ApiController] // Atributo para indicar que esta clase es un controlador de API
+    [AllowAnonymous] // Atributo que permite el acceso a esta acción sin requerir autenticación
     public class UsuariosController : ControllerBase
     {
-        private readonly UsuariosDAO _usuariosDAO;
-        public IConfiguration _configuration;
+        private readonly UsuariosDAO _usuariosDAO; // Instancia de la clase UsuariosDAO para acceder a la lógica de acceso a datos
+        public IConfiguration _configuration; // Instancia de IConfiguration para acceder a la configuración de la aplicación
+
         public UsuariosController(UsuariosDAO usuariosDAO, IConfiguration configuration)
         {
-            _usuariosDAO = usuariosDAO;
-            _configuration = configuration;
+            _usuariosDAO = usuariosDAO; // Inyección de dependencia para UsuariosDAO
+            _configuration = configuration; // Inyección de dependencia para IConfiguration
         }
 
-  
-        [HttpPost]
+        [HttpPost] // Atributo que indica que esta acción responde a las solicitudes POST
         public async Task<IActionResult> Login(int id_usuario, int id_cliente, int id_rol_user)
         {
-            var jwt = _configuration.GetSection("Jwt").Get<Jwt>();
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.Key));
-            var singIn = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-            var claims = new List<Claim> // Se crean las reclamaciones para el usuario autenticado
-                    {
-                    
-                    new Claim("id_usuario",id_usuario.ToString()),
-                    new Claim("id_cliente",id_cliente.ToString()),
-                    new Claim("id_rol_user",id_rol_user.ToString())
-                    };
+            var jwt = _configuration.GetSection("Jwt").Get<Jwt>(); // Obtener la configuración JWT de la sección correspondiente
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.Key)); // Crear una clave simétrica para firmar el token
+            var singIn = new SigningCredentials(key, SecurityAlgorithms.HmacSha256); // Crear credenciales de firma
+
+            var claims = new List<Claim> // Crear una lista de reclamaciones (claims) para el usuario autenticado
+        {
+            new Claim("id_usuario",id_usuario.ToString()), // Agregar la reclamación de ID de usuario
+            new Claim("id_cliente",id_cliente.ToString()), // Agregar la reclamación de ID de cliente
+            new Claim("id_rol_user",id_rol_user.ToString()) // Agregar la reclamación de ID de rol de usuario
+        };
 
             var token = new JwtSecurityToken(
-                  jwt.Issuer,
-                  jwt.Audience,
-                  claims,
-                  expires: DateTime.Now.AddMinutes(4),
-                  signingCredentials: singIn
-                  );
-            var newToken = new JwtSecurityTokenHandler().WriteToken(token);
+                  jwt.Issuer, // Emisor del token
+                  jwt.Audience, // Audiencia del token
+                  claims, // Lista de reclamaciones
+                  expires: DateTime.Now.AddMinutes(4), // Tiempo de expiración del token
+                  signingCredentials: singIn // Credenciales de firma
+            );
+
+            var newToken = new JwtSecurityTokenHandler().WriteToken(token); // Generar el token como cadena
+
             return new JsonResult(new
             {
-                Url = new Uri("https://localhost:7223/Acceso/Login?token="+ newToken),
+                Url = new Uri("https://localhost:7223/Acceso/Login?token=" + newToken), // URL con el token como parámetro
                 success = true,
-                message = "SOS ADMIN",
-                result = newToken
+                message = "SOS ADMIN", // Mensaje
+                result = newToken // El token generado
             });
-            //((int id_usuario, int id_rol_user), int id_cliente) = _usuariosDAO.ValidarUsuario(user);
-            //if (id_usuario != 0)
-            //{
-            //    var jwt = _configuration.GetSection("Jwt").Get<Jwt>();
-            //    var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.Key));
-            //    var singIn = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-            //    var claims = new List<Claim> // Se crean las reclamaciones para el usuario autenticado
-            //        {
-            //        new Claim(ClaimTypes.Name, user.correo_elec),
-            //        new Claim("id_usuario", "1"),
-            //        new Claim("id_cliente", "1"),
-            //        new Claim("id_rol_user", "1")
-
-            //        };
-            //    // Agregar una reclamación específica para el rol del usuario
-            //    if (id_rol_user == 1)
-            //    {
-            //        claims.Add(new Claim("id_rol_user", "1")); // Administrador
-            //    }
-            //    else
-            //    {
-            //        claims.Add(new Claim("id_rol_user", "2")); // Usuario normal
-            //    }
-            //    // Se crea la identidad del usuario y se realiza la autenticación
-            //    var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-            //    await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity));
-
-            //    if (id_rol_user == 1)
-            //    {
-            //        var token = new JwtSecurityToken(
-            //        jwt.Issuer,
-            //        jwt.Audience,
-            //        claims,
-            //        expires: DateTime.Now.AddMinutes(4),
-            //        signingCredentials: singIn
-            //        );
-            //        return new JsonResult(new
-            //        {
-            //            Url=new Uri(),
-            //            success = true,
-            //            message = "SOS ADMIN",
-            //            result = new JwtSecurityTokenHandler().WriteToken(token)
-            //        });
-            //        // return RedirectToAction("Administrador", "Administrador"); // Redirige al panel de administración si es un administrador
-            //    }
-            //    else
-            //    {
-            //        // Se registra una auditoría y se redirige a la página principal
-            //        _usuariosDAO.RegistrarAuditoria(id_usuario, DateTime.Now, true);
-            //        // return RedirectToAction("Index", "Home");
-            //        var token = new JwtSecurityToken(
-            //        jwt.Issuer,
-            //        jwt.Audience,
-            //        claims,
-            //        expires: DateTime.Now.AddMinutes(4),
-            //        signingCredentials: singIn
-            //        );
-            //        return new JsonResult(new
-            //        {
-            //            success = true,
-            //            message = "SOS CLIENTE",
-            //            result = new JwtSecurityTokenHandler().WriteToken(token)
-            //        });
-            //    }
-            //}
-            //else
-            //{
-            //    return new JsonResult( new
-            //    {
-            //        success = false,
-            //        message = "Creedenciales Incorrectas",
-            //        result = ""
-            //    });
-            //}
         }
     }
+
 }
